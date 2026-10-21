@@ -31,15 +31,15 @@ Backend peab nende puhul arvestama, et väärtust ei pruugi olla.
 
 ## Valitud keel: Python
 
-Valisin backendi keeleks Pythoni. Põhjused:
+Valisime backendi keeleks Pythoni. Põhjused:
 
-- Python on loetav ja lihtne õppida, nii et koodist on hiljem kerge aru saada.
+- Python on loetav ja lihtne õppida, nii et mõlemad saame koodist hästi aru.
 - Pythonis on mitu küpset veebiraamistikku ja ORM-i, mis toetavad nii
-  PostgreSQL-i kui MariaDB/MySQL-i. Kui peaksin andmebaasi vahetama, ei pea
+  PostgreSQL-i kui MariaDB/MySQL-i. Kui peaksime andmebaasi vahetama, ei pea
   keelt vahetama.
 - Testandmete genereerimiseks on olemas Faker.
 
-Minu andmebaas on PostgreSQL 16. Kõik allpool võrreldud variandid toetavad
+Meie andmebaas on PostgreSQL 16. Kõik allpool võrreldud variandid toetavad
 nii PostgreSQL-i kui MariaDB/MySQL-i.
 
 ## Variandid
@@ -51,11 +51,11 @@ admin-paneel, kasutajate autentimine, vormide valideerimine ja testimise
 tööriistad. Tabelid kirjeldatakse Pythoni klassidena (`models.py`) ja Django
 genereerib nende põhjal migratsioonid.
 
-**Plussid minu projekti jaoks**
+**Plussid meie projekti jaoks**
 
-- Migratsioonid on sisse ehitatud: `makemigrations` ja `migrate`. Kui lisan
+- Migratsioonid on sisse ehitatud: `makemigrations` ja `migrate`. Kui lisame
   näiteks uue tabeli, piisab mudeli lisamisest.
-- Kuna tegin SQL-i enne valmis, on oluline, et ORM saaks olemasoleva skeemiga
+- Kuna tegime SQL-i enne valmis, on oluline, et ORM saaks olemasoleva skeemiga
   kohaneda. Käsk `inspectdb` loeb olemasolevast andmebaasist mudelid sisse ja
   `db_table` / `db_column` lubavad hoida Pythonis ingliskeelseid nimesid
   (`title`), aga andmebaasis eestikeelseid (`pealkiri`).
@@ -73,7 +73,7 @@ genereerib nende põhjal migratsioonid.
   tuleb õppida, kuhu mis fail käib.
 - JSON API jaoks on vaja lisaks Django REST Frameworki (või käsitsi
   `JsonResponse`), sest Django ise on mõeldud pigem HTML-lehtede jaoks.
-- Migratsioonid eeldavad, et skeemi omanik on Django. Kui muudan tabelit
+- Migratsioonid eeldavad, et skeemi omanik on Django. Kui muudame tabelit
   DataGripis käsitsi, lähevad mudelid ja andmebaas lahku.
 
 ### 2. FastAPI + SQLAlchemy + Alembic
@@ -83,7 +83,7 @@ jaoks kasutatakse SQLAlchemy ORM-i ja migratsioonideks Alembicut. Sisend- ja
 väljundandmed kirjeldatakse Pydanticu mudelitega ning API dokumentatsioon
 (Swagger) tekib automaatselt.
 
-**Plussid minu projekti jaoks**
+**Plussid meie projekti jaoks**
 
 - Kui frontend vajab ainult JSON API-t, on FastAPI just selleks tehtud.
   Automaatne Swaggeri leht teeb API testimise lihtsaks.
@@ -107,17 +107,17 @@ Flask on minimaalne raamistik, kus on ainult marsruudid (URL -> funktsioon).
 Peewee on väike ja lihtne ORM, mille mudelid näevad välja sarnased Django
 omadele.
 
-**Plussid minu projekti jaoks**
+**Plussid meie projekti jaoks**
 
 - Väga väike ja kiire selgeks saada, sobib väikesele projektile.
 - Peewee'l on tööriist `pwiz`, mis loeb olemasolevast andmebaasist mudelid
-  sisse, nii et minu valmis SQL-ist saaks kohe koodi.
+  sisse, nii et meie valmis SQL-ist saaks kohe koodi.
 - Vähe "maagiat": on lihtne aru saada, mis päring andmebaasi läheb.
 
 **Miinused**
 
 - Peewee migratsioonid (`playhouse.migrate`) tuleb kirjutada käsitsi, ei ole
-  automaatset `makemigrations` sarnast lahendust. Minu skeem muutub veel
+  automaatset `makemigrations` sarnast lahendust. Meie skeem muutub veel
   (näiteks istekohtade ajutine lukustamine broneerimise ajal), nii et see
   oleks palju lisatööd.
 - Peewee kogukond on palju väiksem kui Djangol või SQLAlchemyl.
@@ -137,14 +137,14 @@ omadele.
 
 ## Valik: Django + Django ORM
 
-Valisin Django, sest minu projektis on palju omavahel seotud tabeleid (kinod,
+Valisime Django, sest meie projektis on palju omavahel seotud tabeleid (kinod,
 saalid, kohad, seansid, broneeringud, maksed, uudised) ja skeem muutub veel.
 Selle juures on kõige suurem abi automaatsetest migratsioonidest, mis on
-Djangos sisse ehitatud. Peewee puhul peaksin neid käsitsi kirjutama ja
+Djangos sisse ehitatud. Peewee puhul peaksime neid käsitsi kirjutama ja
 SQLAlchemy puhul seadistama eraldi tööriista.
 
 Kuna SQL-skeem on enne valmis, on oluline, et ORM ei sunniks tabeleid ümber
-nimetama. Djangos saan `inspectdb`-ga olemasolevast andmebaasist mudelid
+nimetama. Djangos saame `inspectdb`-ga olemasolevast andmebaasist mudelid
 sisse lugeda ning `db_table` ja `db_column` abil eestikeelsed tabelid ja
 veerud alles jätta.
 
