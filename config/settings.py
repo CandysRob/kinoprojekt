@@ -79,10 +79,14 @@ DATABASES = {
         "PASSWORD": env("POSTGRES_PASSWORD"),
         "HOST": env("POSTGRES_HOST", "localhost"),
         "PORT": env("POSTGRES_PORT", "5432"),
+        "OPTIONS": {"connect_timeout": 5},
     }
 }
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+# Kasutajad on tabelis "user" (project.sql)
+AUTH_USER_MODEL = "cinema.User"
 
 AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
