@@ -37,6 +37,7 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "rest_framework",
     "cinema",
 ]
 
@@ -103,6 +104,14 @@ TIME_ZONE = "Europe/Tallinn"
 USE_I18N = True
 
 USE_TZ = True
+
+
+REST_FRAMEWORK = {
+    # Sisselogimata kasutaja saab ainult lugeda
+    "DEFAULT_PERMISSION_CLASSES": ["rest_framework.permissions.IsAuthenticatedOrReadOnly"],
+    "DEFAULT_RENDERER_CLASSES": ["rest_framework.renderers.JSONRenderer"]
+    + (["rest_framework.renderers.BrowsableAPIRenderer"] if DEBUG else []),
+}
 
 
 STATIC_URL = "static/"
