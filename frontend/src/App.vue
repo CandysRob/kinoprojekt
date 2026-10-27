@@ -1,35 +1,15 @@
+<!--
+  Põhikomponent: päis ja jalus on igal lehel samad.
+  <RouterView> asemele paneb Vue Router praeguse aadressi lehe (router.js).
+-->
 <script setup>
-import AppFooter from "./components/AppFooter.vue";
-import AppHeader from "./components/AppHeader.vue";
+import AppHeader from './components/AppHeader.vue'
 </script>
 
 <template>
-  <a class="skip-link" href="#main">Liigu sisu juurde</a>
   <AppHeader />
-  <main id="main" class="main">
+  <main class="page">
     <RouterView />
   </main>
-  <AppFooter />
+  <footer class="site-footer">Õppeprojekt: filmid ja kinod on väljamõeldud.</footer>
 </template>
-
-<style scoped>
-.main {
-  min-height: calc(100vh - var(--header-height));
-}
-
-.skip-link {
-  position: absolute;
-  left: var(--space-4);
-  top: -100px;
-  z-index: 100;
-  padding: var(--space-2) var(--space-4);
-  border-radius: var(--radius-sm);
-  background: var(--color-accent);
-  color: var(--color-accent-ink);
-  font-weight: 600;
-}
-
-.skip-link:focus {
-  top: var(--space-2);
-}
-</style>

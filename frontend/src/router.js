@@ -1,34 +1,27 @@
-import { createRouter, createWebHistory } from "vue-router";
+/**
+ * Millise aadressi peal millist lehte näidatakse.
+ *
+ * Need on FRONTENDI aadressid (lehed). Backendi aadressid (/api/...) on
+ * failis cinema/api_urls.py.
+ */
+import { createRouter, createWebHistory } from 'vue-router'
 
-import HomeView from "./views/HomeView.vue";
+import FilmDetailView from './views/FilmDetailView.vue'
+import FilmsView from './views/FilmsView.vue'
+import NotFoundView from './views/NotFoundView.vue'
+import ScreeningsView from './views/ScreeningsView.vue'
 
 const routes = [
-  { path: "/", name: "home", component: HomeView, meta: { title: "Avaleht" } },
-  { path: "/filmid", name: "films", component: () => import("./views/FilmsView.vue"), meta: { title: "Filmid" } },
-  {
-    path: "/filmid/:id(\\d+)",
-    name: "film-detail",
-    component: () => import("./views/FilmDetailView.vue"),
-    props: true,
-    meta: { title: "Film" },
-  },
-  { path: "/seansid", name: "screenings", component: () => import("./views/ScreeningsView.vue"), meta: { title: "Seansid" } },
-  { path: "/:pathMatch(.*)*", name: "not-found", component: () => import("./views/NotFoundView.vue"), meta: { title: "Lehte ei leitud" } },
-];
+  { path: '/', name: 'films', component: FilmsView },
+  // :id on aadressi osa, props: true annab selle lehele propsina "id"
+  { path: '/filmid/:id', name: 'film', component: FilmDetailView, props: true },
+  { path: '/seansid', name: 'screenings', component: ScreeningsView },
+  // Kõik muud aadressid. Peab olema viimane.
+  { path: '/:pathMatch(.*)*', name: 'not-found', component: NotFoundView },
+]
 
-const router = createRouter({
+export default createRouter({
   history: createWebHistory(),
   routes,
-  scrollBehavior(to, from, savedPosition) {
-    if (savedPosition) return savedPosition;
-    // Filtrite muutmisel (sama leht, uus query) jääb kerimisasend paigale
-    if (to.path === from.path) return false;
-    return { top: 0 };
-  },
-});
-
-router.afterEach((to) => {
-  document.title = to.meta.title ? `${to.meta.title} · Kinoprojekt` : "Kinoprojekt";
-});
-
-export default router;
+  scrollBehavior: () => ({ top: 0 }),
+})
