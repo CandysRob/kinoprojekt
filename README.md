@@ -102,17 +102,16 @@ käsk ei loo.
 API on ainult lugemiseks. Kasutajate, broneeringute ja maksete andmeid see ei
 näita.
 
-| Otspunkt | Filtrid |
+| Otspunkt | Mida tagastab |
 | --- | --- |
-| `GET /api/movies/` | `search`, `genre` (id), `featured`, `now_showing`, `page`, `page_size` |
-| `GET /api/movies/{id}/` | – |
-| `GET /api/genres/` | – |
-| `GET /api/cinemas/`, `GET /api/cinemas/{id}/` | – (koos saalidega) |
-| `GET /api/screenings/` | `movie` (id), `cinema` (id), `date` (AAAA-KK-PP), `page`, `page_size` |
-| `GET /api/screenings/{id}/` | – |
+| `GET /api/movies/` | kõik filmid koos žanritega |
+| `GET /api/movies/{id}/` | üks film koos kirjeldusega |
+| `GET /api/genres/` | kõik žanrid |
+| `GET /api/cinemas/` | kõik kinod koos saalidega |
+| `GET /api/screenings/` | tulevased seansid koos filmi, saali ja kinoga; `?movie={id}` näitab ühe filmi seansse |
 
-Seansside nimekiri näitab ainult tulevasi seansse, koos filmi, saali ja kinoga.
-Vigase filtri korral tuleb vastus `400`, puuduva kirje korral `404`.
+Nimekirjad on tavalised JSON-massiivid. Puuduva kirje korral tuleb vastus
+`404`, vigase `movie` väärtuse korral `400`.
 
 ## Testid ja kontrollid
 
