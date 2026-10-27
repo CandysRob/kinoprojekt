@@ -4,6 +4,75 @@ Selles repos on kinoprojekti andmebaasi struktuur ja backendi valiku võrdlus.
 
 - [`project.sql`](project.sql) – andmebaasi struktuur (PostgreSQL)
 - see fail – backendi keel, ORM-id ja raamistikud
+- `config/` – Django projekti seaded ja URL-id
+- `cinema/` – mudelid, admin-paneel ja testid
+
+## Käivitamine
+
+Vaja on [uv](https://docs.astral.sh/uv/) ja Docker Desktop.
+
+1. Tee seadete fail ja muuda selles `DJANGO_SECRET_KEY` ja `POSTGRES_PASSWORD`:
+
+   ```bash
+   cp .env.example .env
+   ```
+
+   `.env` on `.gitignore`'is, seda reposse ei panda.
+
+2. Käivita andmebaas (PostgreSQL 16):
+
+   ```bash
+   docker compose up -d
+   ```
+
+   Parool määratakse ainult andmebaasi esimesel loomisel. Kui muudad hiljem
+   `POSTGRES_PASSWORD`-i, kustuta andmed käsuga `docker compose down -v`.
+
+3. Paigalda sõltuvused ja loo tabelid:
+
+   ```bash
+   uv sync
+   uv run python manage.py migrate
+   ```
+
+4. Loo admin-kasutaja ja käivita server:
+
+   ```bash
+   uv run python manage.py createsuperuser
+   uv run python manage.py runserver
+   ```
+
+   - admin-paneel: <http://127.0.0.1:8000/admin/>
+   - tervisekontroll: <http://127.0.0.1:8000/health/> (näitab, kas andmebaas vastab)
+
+Testid (Django teeb nende jaoks eraldi testandmebaasi):
+
+```bash
+uv run python manage.py test
+```
+
+### Mudelid ja `project.sql`
+
+Tabelid luuakse Django migratsioonidega (`cinema/migrations/`), mitte
+`project.sql`-ist. Mudelites on ingliskeelsed nimed, andmebaasis jäävad
+`db_table` ja `db_column` abil samad eestikeelsed tabelid ja veerud.
+Skeemi muutmiseks muuda `cinema/models.py` ja tee uus migratsioon:
+
+```bash
+uv run python manage.py makemigrations
+uv run python manage.py migrate
+```
+
+Erinevused `project.sql`-iga:
+
+- Tabelis `user` on Django sisselogimise jaoks lisaveerud `last_login`,
+  `is_active`, `is_staff` ja `is_superuser`, veerg `user` (kasutajanimi) on
+  unikaalne ja `password_hash` hoiab Django parooliräsi. Õiguste jaoks tekivad
+  ka tabelid `user_groups` ja `user_user_permissions`.
+- Kustutamise reegleid (`on delete cascade` jne) täidab Django, mitte
+  andmebaas. Django kaudu kustutades on tulemus sama, aga otse SQL-iga
+  (nt DataGripis) ei saa rida kustutada, kui sellele viitavad teised read.
+- Arvustuse hinde piirang on nimega `review_rating_between_1_and_5`.
 
 ## Andmebaasi struktuur
 
