@@ -1,0 +1,19 @@
+# Saladused
+.env
+
+# Python
+.venv/
+__pycache__/
+*.pyc
+
+# Django
+staticfiles/
+media/
+db.sqlite3
+
+# Andmebaasi andmed (Docker)
+pgdata/
+
+# Redaktorid
+.idea/
+.vscode/
