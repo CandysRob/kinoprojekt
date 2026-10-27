@@ -4,6 +4,14 @@ import HomeView from "./views/HomeView.vue";
 
 const routes = [
   { path: "/", name: "home", component: HomeView, meta: { title: "Avaleht" } },
+  { path: "/filmid", name: "films", component: () => import("./views/FilmsView.vue"), meta: { title: "Filmid" } },
+  {
+    path: "/filmid/:id(\\d+)",
+    name: "film-detail",
+    component: () => import("./views/FilmDetailView.vue"),
+    props: true,
+    meta: { title: "Film" },
+  },
   { path: "/:pathMatch(.*)*", name: "not-found", component: () => import("./views/NotFoundView.vue"), meta: { title: "Lehte ei leitud" } },
 ];
 
