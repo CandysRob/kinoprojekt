@@ -1,15 +1,25 @@
 # Kinoprojekt
 
-Selles repos on kinoprojekti andmebaasi struktuur ja backendi valiku võrdlus.
+Selles repos on kinoprojekti veebirakendus (Django + Vue), andmebaasi struktuur
+ja backendi valiku võrdlus.
 
 - [`project.sql`](project.sql) – andmebaasi struktuur (PostgreSQL)
-- see fail – backendi keel, ORM-id ja raamistikud
+- see fail – käivitamine, backendi keel, ORM-id ja raamistikud
+- [`docs/ROADMAP.md`](docs/ROADMAP.md) – mis töötab, mis on pooleli ja mis järjekorras edasi teha
 - `config/` – Django projekti seaded ja URL-id
-- `cinema/` – mudelid, admin-paneel ja testid
+- `cinema/` – mudelid, API, admin-paneel, arendusandmete käsk ja testid
+- `frontend/` – Vue 3 + Vite kasutajaliides
 
-## Käivitamine
+| Teenus | Aadress |
+| --- | --- |
+| Kasutajaliides (Vue) | <http://localhost:5173/> |
+| API | <http://localhost:8000/api/> |
+| Admin-paneel | <http://localhost:8000/admin/> |
+| Tervisekontroll | <http://localhost:8000/health/> |
 
-Vaja on [uv](https://docs.astral.sh/uv/) ja Docker Desktop.
+## Käivitamine Dockeriga (soovitatav)
+
+Vaja on ainult Docker Desktopi.
 
 1. Tee seadete fail ja muuda selles `DJANGO_SECRET_KEY` ja `POSTGRES_PASSWORD`:
 
@@ -17,39 +27,102 @@ Vaja on [uv](https://docs.astral.sh/uv/) ja Docker Desktop.
    cp .env.example .env
    ```
 
-   `.env` on `.gitignore`'is, seda reposse ei panda.
+   `.env` on `.gitignore`'is, seda reposse ei panda. Uue võtme saad käsuga, mis
+   on kirjas `.env.example` failis.
 
-2. Käivita andmebaas (PostgreSQL 16):
-
-   ```bash
-   docker compose up -d
-   ```
-
-   Parool määratakse ainult andmebaasi esimesel loomisel. Kui muudad hiljem
-   `POSTGRES_PASSWORD`-i, kustuta andmed käsuga `docker compose down -v`.
-
-3. Paigalda sõltuvused ja loo tabelid:
+2. Käivita andmebaas, backend ja frontend:
 
    ```bash
-   uv sync
-   uv run python manage.py migrate
+   docker compose up -d --build
    ```
 
-4. Loo admin-kasutaja ja käivita server:
+   Backend käivitub alles siis, kui andmebaas on valmis, ja frontend alles siis,
+   kui backend vastab. Olekut näeb käsuga `docker compose ps`.
+
+3. Loo tabelid ja lisa arendusandmed:
 
    ```bash
-   uv run python manage.py createsuperuser
-   uv run python manage.py runserver
+   docker compose exec backend uv run python manage.py migrate
+   docker compose exec backend uv run python manage.py seed_dev_data
    ```
 
-   - admin-paneel: <http://127.0.0.1:8000/admin/>
-   - tervisekontroll: <http://127.0.0.1:8000/health/> (näitab, kas andmebaas vastab)
+4. Ava <http://localhost:5173/>. Admin-paneeli jaoks loo kasutaja:
 
-Testid (Django teeb nende jaoks eraldi testandmebaasi):
+   ```bash
+   docker compose exec backend uv run python manage.py createsuperuser
+   ```
+
+Koodi muudatused jõuavad konteineritesse kohe (kaust on kaardistatud), Django
+ja Vite laevad end ise uuesti. Uue Pythoni või npm-i sõltuvuse järel tee
+`docker compose up -d --build`.
+
+Andmebaasi andmed on Dockeri volume'is `pgdata` ja jäävad alles ka pärast
+`docker compose down`. Parool määratakse ainult andmebaasi esimesel loomisel.
+Kui muudad hiljem `POSTGRES_PASSWORD`-i, tuleb andmed kustutada käsuga
+`docker compose down -v` (see kustutab kogu andmebaasi).
+
+## Käivitamine ilma Dockerita
+
+Vaja on [uv](https://docs.astral.sh/uv/), Node.js 20.19+ ja PostgreSQL 16
+(näiteks ainult andmebaas Dockerist: `docker compose up -d db`).
 
 ```bash
-uv run python manage.py test
+uv sync
+uv run python manage.py migrate
+uv run python manage.py seed_dev_data
+uv run python manage.py runserver
 ```
+
+Teises terminalis:
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+Vite suunab `/api` päringud aadressile `http://127.0.0.1:8000`, seega CORS-i
+seadistust pole vaja. Teise aadressi jaoks määra `API_PROXY_TARGET`.
+
+## Arendusandmed
+
+```bash
+uv run python manage.py seed_dev_data            # 7 päeva seansse
+uv run python manage.py seed_dev_data --days 14  # rohkem päevi
+```
+
+Käsk loob väljamõeldud žanrid, filmid, kinod, saalid, istekohad ja seansid.
+Seda võib käivitada mitu korda: olemasolevaid ridu ei dubleerita, lisatakse
+ainult puuduvad (näiteks uue päeva seansid). Sama päeva ja saali kava on alati
+sama ning seansid samas saalis ei kattu. Kasutajaid, broneeringuid ega makseid
+käsk ei loo.
+
+## API
+
+API on ainult lugemiseks. Kasutajate, broneeringute ja maksete andmeid see ei
+näita.
+
+| Otspunkt | Filtrid |
+| --- | --- |
+| `GET /api/movies/` | `search`, `genre` (id), `featured`, `now_showing`, `page`, `page_size` |
+| `GET /api/movies/{id}/` | – |
+| `GET /api/genres/` | – |
+| `GET /api/cinemas/`, `GET /api/cinemas/{id}/` | – (koos saalidega) |
+| `GET /api/screenings/` | `movie` (id), `cinema` (id), `date` (AAAA-KK-PP), `page`, `page_size` |
+| `GET /api/screenings/{id}/` | – |
+
+Seansside nimekiri näitab ainult tulevasi seansse, koos filmi, saali ja kinoga.
+Vigase filtri korral tuleb vastus `400`, puuduva kirje korral `404`.
+
+## Testid ja kontrollid
+
+```bash
+uv run python manage.py test                       # backend ja API
+uv run python manage.py makemigrations --check     # mudelid ja migratsioonid on kooskõlas
+cd frontend && npm run build                       # frontend kompileerub
+```
+
+Dockeris: `docker compose exec backend uv run python manage.py test`.
 
 ### Mudelid ja `project.sql`
 
