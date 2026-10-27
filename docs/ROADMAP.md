@@ -1,68 +1,45 @@
 # Kinoprojekti teekaart
 
-Seis: oktoober 2026. Selles failis on kirjas, mis praegu töötab, mis on
-teadlikult pooleli ja mis järjekorras on mõistlik edasi teha.
+Seis: oktoober 2026.
 
-> **Jira:** repos ega kaasasolevates dokumentides ei ole Jira ülesannete
-> numbreid ega pealkirju. Allpool on funktsioonid nimetatud sisu järgi ja
-> veerg "Jira" on tühi. Lisage sinna oma ülesannete numbrid. Ülesannete
-> aktsepteerimistingimused on Jiras, mitte siin.
+> **Jira:** repos ei ole Jira ülesannete numbreid ega pealkirju. Allpool on
+> funktsioonid nimetatud sisu järgi ja veerg "Jira" on tühi. Lisage sinna oma
+> ülesannete numbrid. Aktsepteerimistingimused on Jiras, mitte siin.
 
 ## Mis praegu töötab
 
 | Osa | Sisu |
 | --- | --- |
-| Andmebaas | PostgreSQL 16, 13 tabelit `project.sql` järgi, Django migratsioonid (`cinema/migrations/0001_initial.py`) |
-| Mudelid | `User`, `Cinema`, `Hall`, `Seat`, `Movie`, `Genre`, `MovieGenre`, `Screening`, `Booking`, `BookedSeat`, `Payment`, `Review`, `News` (`cinema/models.py`) |
-| Piirangud | koht saalis kordumatu, koht seansil broneeritav üks kord, seansi lõpp pärast algust, hinne 1–5 |
+| Andmebaas | PostgreSQL 16, 13 tabelit `project.sql` järgi, Django migratsioonid |
+| Mudelid | `cinema/models.py` (kasutajad, kinod, saalid, kohad, filmid, žanrid, seansid, broneeringud, maksed, arvustused, uudised) |
 | Admin-paneel | kõigi tabelite lisamine ja muutmine (`/admin/`) |
 | API | filmid, žanrid, kinod, seansid, ainult lugemiseks (`/api/`) |
-| Kasutajaliides | avaleht, filmide kataloog, filmi leht, seansside kava (Vue 3) |
+| Lehed | filmide nimekiri, filmi leht koos seanssidega, seansside tabel |
 | Arendusandmed | `manage.py seed_dev_data` |
-| Testid | mudelite piirangud, API, arendusandmete käsk (`cinema/tests.py`, `test_api.py`, `test_seed.py`) |
-| Arenduskeskkond | `docker compose`: db, backend, frontend |
+| Testid | mudelite piirangud, API, arendusandmete käsk |
+| Docker | `docker compose`: db, backend, frontend |
 
-## Mis selles etapis lisandus
-
-- Django REST Frameworki API filmide, žanrite, kinode ja seansside jaoks
-  (filtrid, lehekülgedeks jagamine, 400/404 vastused).
-- Vue 3 + Vite frontend: ühine päis ja jalus, filmikaart, plakat, olekuteated
-  (laadimine, tühi, viga, "tulekul"), reageeriv paigutus telefonist arvutini.
-- Arendusandmete käsk, mida võib käivitada mitu korda.
-- Docker Compose teenused backendi ja frontendi jaoks koos tervisekontrollidega.
-- API ja arendusandmete testid.
-
-Andmebaasi skeemi selles etapis ei muudetud, olemasolevad mudelid katsid kõik
-vajaliku.
-
-## Teadlikult pooleli
+## Teadlikult tegemata
 
 | Funktsioon | Praegune seis | Jira |
 | --- | --- | --- |
-| Piletite broneerimine | tabelid `broneeringud` ja `broneeritud_kohad` on olemas, API ja kasutajaliides puuduvad; seansi juures on "tulekul" teade | |
-| Maksed | tabel `maksed` on olemas, makseteenust ega API-t pole | |
-| Kasutaja konto (registreerumine, sisselogimine) | kasutajamudel ja Django autentimine on olemas, avalikku registreerumist ega sisselogimise lehte pole | |
-| Arvustused | tabel `arvustused` on olemas, API ja kasutajaliides puuduvad | |
-| Uudised | tabel `uudised` on olemas, avalehel on "tulekul" teade | |
-| Filmiplakatid | väli `plakati_url` on olemas, arendusandmetes plakateid pole (kuvatakse genereeritud kujundus) | |
-| Eriüritused, laiendatud administreerimine | pole alustatud | |
-| Toodangukeskkond | ainult arendusseadistus (`runserver`, Vite dev server) | |
+| Filmide otsing ja filtrid (žanr, kuupäev, kino) | pole | |
+| Piletite broneerimine | tabelid `broneeringud` ja `broneeritud_kohad` on olemas, API ja leht puuduvad | |
+| Maksed | tabel `maksed` on olemas | |
+| Kasutaja konto (registreerumine, sisselogimine) | kasutajamudel on olemas, lehti pole | |
+| Arvustused | tabel `arvustused` on olemas | |
+| Uudised | tabel `uudised` on olemas | |
+| Filmiplakatid | väli `plakati_url` on olemas, arendusandmetes plakateid pole (näidatakse halli kasti) | |
 
-## Mida tulevased funktsioonid saavad kasutada
+## Kust edasi minna
 
-| Funktsioon | Mudelid | Olemasolev API / kood |
+| Funktsioon | Mudelid | Mida muuta |
 | --- | --- | --- |
-| Istekohtade valik | `Seat`, `Hall`, `BookedSeat` (`unique_booked_seat_per_screening`) | `GET /api/screenings/{id}/`, `ShowtimeChip.vue` |
-| Broneerimine | `Booking`, `BookedSeat`, `Screening.base_price` | `ScreeningSerializer` |
-| Maksmine | `Payment` (`paid_at` null = maksmata) | – |
-| Kasutaja konto | `User` (`AUTH_USER_MODEL = "cinema.User"`) | API vaikeõigus `IsAuthenticatedOrReadOnly` |
-| Arvustused | `Review` (`review_rating_between_1_and_5`) | `FilmDetailView.vue` |
-| Uudised | `News` (`cinema` null = kõigile kinodele, `published_at` null = mustand) | `HomeView.vue` uudiste plokk |
-| Kinode lehed | `Cinema`, `Hall` | `GET /api/cinemas/{id}/` |
-
-Uus API osa käib `cinema/serializers.py`, `cinema/api_views.py` ja
-`cinema/api_urls.py` kaudu. Frontendi päringud on `frontend/src/api/cinema.js`
-failis.
+| Filtrid | `Movie`, `Genre`, `Screening` | `cinema/api_views.py` `get_queryset`, vastav Vue leht |
+| Uudised | `News` | uus serializer + ViewSet, uus leht ja link päises |
+| Istekohtade valik | `Seat`, `BookedSeat` | uus API, seansi leht |
+| Broneerimine | `Booking`, `BookedSeat` | vajab kasutaja kontot ja istekohtade valikut |
+| Arvustused | `Review` | vajab kasutaja kontot, filmi leht |
 
 ## Sõltuvused
 
@@ -70,32 +47,18 @@ failis.
 Kasutaja konto ──┬─> Broneerimine ──> Maksmine
                  └─> Arvustused
 Istekohtade valik ─> Broneerimine
-Uudised            (sõltumatu)
-Kinode lehed       (sõltumatu)
+Filtrid, uudised   (sõltumatud)
 ```
-
-- Broneerimine vajab sisselogitud kasutajat (`Booking.user` on kohustuslik) ja
-  istekohtade valikut.
-- Maksmine vajab broneeringut (`Payment.booking`).
-- Arvustus vajab kasutajat (`Review.user`).
-- Uudiste ja kinode lehed vajavad ainult olemasolevaid tabeleid ja uut API osa.
 
 ## Soovitatud järjekord
 
-1. **Uudised** – väike ja sõltumatu: üks lugemis-API (ainult avaldatud uudised)
-   ja avalehe ploki asendamine. Hea esimene ülesanne API laiendamise
-   harjutamiseks.
-2. **Istekohtade kaart** – seansi saali kohad ja juba broneeritud kohad
-   (lugemine). Broneerimise eeldus, mis ei vaja veel sisselogimist.
-3. **Kasutaja konto** – registreerumine ja sisselogimine (Django sessioonid
-   või token). Vajalik broneerimiseks ja arvustusteks.
-4. **Broneerimine** – kohtade valik ja broneeringu loomine. Kasutada
-   tehingut (`transaction.atomic`), et kaks inimest ei saaks sama kohta.
-   Andmebaasi piirang `unique_booked_seat_per_screening` on juba olemas.
-5. **Arvustused** – hinne ja kommentaar filmi lehel.
-6. **Maksmine** – makseteenuse liides (alguses testrežiimis).
-7. **Eriüritused ja laiendatud administreerimine.**
+1. **Filtrid** – žanri valik filmide lehel, kuupäev seansside lehel. Väike ja
+   puudutab kõiki kihte (ORM, API, Vue).
+2. **Uudised** – esimene täiesti uus API osa ja leht.
+3. **Istekohtade kaart** – seansi saali kohad ja juba broneeritud kohad.
+4. **Kasutaja konto** – registreerumine ja sisselogimine.
+5. **Broneerimine** – kasutada `transaction.atomic`, et kaks inimest ei saaks
+   sama kohta (andmebaasi piirang `unique_booked_seat_per_screening` on olemas).
+6. **Arvustused**, siis **maksed**.
 
-**Soovitatud järgmine samm:** istekohtade kaart (punkt 2), kui eesmärk on
-jõuda kiiresti broneerimiseni; uudised (punkt 1), kui on vaja väikest ja
-iseseisvat ülesannet.
+Tööjaotus on failis [TEAM_WORK_PLAN.md](TEAM_WORK_PLAN.md).

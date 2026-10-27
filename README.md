@@ -6,6 +6,7 @@ ja backendi valiku võrdlus.
 - [`project.sql`](project.sql) – andmebaasi struktuur (PostgreSQL)
 - see fail – käivitamine, backendi keel, ORM-id ja raamistikud
 - [`docs/ROADMAP.md`](docs/ROADMAP.md) – mis töötab, mis on pooleli ja mis järjekorras edasi teha
+- [`docs/TEAM_WORK_PLAN.md`](docs/TEAM_WORK_PLAN.md) – kuidas töö kahe vahel jaguneb ja kes mida üle vaatab
 - `config/` – Django projekti seaded ja URL-id
 - `cinema/` – mudelid, API, admin-paneel, arendusandmete käsk ja testid
 - `frontend/` – Vue 3 + Vite kasutajaliides
@@ -16,6 +17,26 @@ ja backendi valiku võrdlus.
 | API | <http://localhost:8000/api/> |
 | Admin-paneel | <http://localhost:8000/admin/> |
 | Tervisekontroll | <http://localhost:8000/health/> |
+
+Lehed: **Filmid** (`/`), **filmi leht** (`/filmid/5`) ja **Seansid** (`/seansid`).
+
+### Kuidas film andmebaasist ekraanile jõuab
+
+```
+PostgreSQL tabel "filmid"
+  -> cinema/models.py           Movie (db_table = "filmid")
+  -> cinema/api_views.py        MovieViewSet: Movie.objects... (ORM päring)
+  -> cinema/serializers.py      MovieListSerializer: Python objekt -> JSON
+  -> cinema/api_urls.py         aadress /api/movies/
+  -> frontend/vite.config.js    Vite suunab /api päringud Djangole
+  -> frontend/src/api.js        fetchMovies() teeb päringu
+  -> frontend/src/views/FilmsView.vue   films.value = [...]
+  -> frontend/src/components/FilmCard.vue  üks kaart filmi kohta
+```
+
+Uue välja näitamiseks lisa see serializeri `fields` nimekirja ja seejärel
+Vue komponenti. Näiteks keel on serializeris juba olemas, seega piisab
+`FilmCard.vue` faili lisamisest: `{{ film.language }}`.
 
 ## Käivitamine Dockeriga (soovitatav)
 
