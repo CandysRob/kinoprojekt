@@ -12,6 +12,7 @@ const routes = [
     props: true,
     meta: { title: "Film" },
   },
+  { path: "/seansid", name: "screenings", component: () => import("./views/ScreeningsView.vue"), meta: { title: "Seansid" } },
   { path: "/:pathMatch(.*)*", name: "not-found", component: () => import("./views/NotFoundView.vue"), meta: { title: "Lehte ei leitud" } },
 ];
 

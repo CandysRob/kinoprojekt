@@ -2,7 +2,8 @@
 const TIME_ZONE = "Europe/Tallinn";
 
 const timeFormat = new Intl.DateTimeFormat("et-EE", { timeZone: TIME_ZONE, hour: "2-digit", minute: "2-digit" });
-const weekdayFormat = new Intl.DateTimeFormat("et-EE", { timeZone: TIME_ZONE, weekday: "short" });
+// Eesti lühike nädalapäev on üks täht (N, R), seega kasutame pikka nime
+const weekdayFormat = new Intl.DateTimeFormat("et-EE", { timeZone: TIME_ZONE, weekday: "long" });
 const dayMonthFormat = new Intl.DateTimeFormat("et-EE", { timeZone: TIME_ZONE, day: "numeric", month: "short" });
 const longDateFormat = new Intl.DateTimeFormat("et-EE", {
   timeZone: TIME_ZONE,
