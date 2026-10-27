@@ -11,6 +11,7 @@ export default defineConfig(({ mode }) => {
     plugins: [vue()],
     server: {
       port: Number(env.FRONTEND_PORT || 5173),
+      watch: env.WATCH_POLLING === "true" ? { usePolling: true, interval: 300 } : undefined,
       proxy: {
         "/api": { target: apiTarget },
       },
