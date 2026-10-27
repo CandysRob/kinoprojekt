@@ -17,3 +17,9 @@ pgdata/
 # Redaktorid
 .idea/
 .vscode/
+
+# Frontend (Node)
+node_modules/
+frontend/dist/
+npm-debug.log*
+.env.local
