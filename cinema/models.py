@@ -70,6 +70,9 @@ class Cinema(models.Model):
 
     class Meta:
         db_table = "kino"
+        indexes = [
+            models.Index(fields=["name"], name="cinema_name_idx"),  # /api/cinemas/ sorteerib nime järgi
+        ]
 
     def __str__(self):
         return self.name
@@ -110,6 +113,9 @@ class Genre(models.Model):
 
     class Meta:
         db_table = "žanrid"
+        indexes = [
+            models.Index(fields=["name"], name="genre_name_idx"),  # /api/genres/ sorteerib nime järgi
+        ]
 
     def __str__(self):
         return self.name
@@ -130,6 +136,10 @@ class Movie(models.Model):
 
     class Meta:
         db_table = "filmid"
+        indexes = [
+            models.Index(fields=["title"], name="movie_title_idx"),  # /api/movies/ sorteerib pealkirja järgi
+            models.Index(fields=["release_date"], name="movie_release_date_idx"),  # uusimad filmid, admini sorteerimine
+        ]
 
     def __str__(self):
         return self.title
@@ -158,6 +168,12 @@ class Screening(models.Model):
 
     class Meta:
         db_table = "seansid"
+        indexes = [
+            # /api/screenings/: tulevased seansid algusaja järjekorras
+            models.Index(fields=["starts_at"], name="screening_starts_at_idx"),
+            # /api/screenings/?movie=5 (filmi leht): ühe filmi tulevased seansid algusaja järjekorras
+            models.Index(fields=["movie", "starts_at"], name="screening_movie_starts_idx"),
+        ]
         constraints = [
             models.CheckConstraint(
                 condition=models.Q(ends_at__gt=models.F("starts_at")),
