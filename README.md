@@ -178,6 +178,29 @@ Vahemällu **ei panda**:
   tühistamisel** tuleb selle seansi kirje kohe kustutada, muidu näeb kasutaja
   juba müüdud kohta vabana.
 
+### Kuidas vahemälu töötab
+
+Plaani tabel on koodis olemas. Kasutusel on Django oma vahemälu
+(`django.core.cache`):
+
+- **Kus andmed on:** ilma Dockerita failides (kaust `.cache/`, gitis ei ole),
+  Dockeris Redises (`docker-compose.yml` teenus `redis`). Valiku teeb
+  `config/settings.py`: kui keskkonnamuutuja `REDIS_URL` on olemas, kasutatakse
+  Redist. Koodi pole vaja muuta.
+- **Vahemällu panek:** `cinema/api_views.py` klass `CachedListMixin`. Esimene
+  päring loeb andmebaasist ja salvestab vastuse, järgmised saavad selle
+  vahemälust ilma andmebaasi päringuta. Iga filmi seanssidel (`?movie=5`) on oma kirje.
+- **Tühistamine:** `cinema/signals.py`. Filmi, žanri, filmi žanri, kino, saali
+  või seansi salvestamisel või kustutamisel tühjendatakse kogu vahemälu.
+  Andmeid muudetakse harva, seega on see lihtsam kui iga võtme eraldi otsimine.
+- **Testid:** `cinema/test_cache.py`.
+
+Redise sisu vaatamine Dockeris:
+
+```bash
+docker compose exec redis redis-cli keys '*'
+```
+
 ## Testid ja kontrollid
 
 ```bash
