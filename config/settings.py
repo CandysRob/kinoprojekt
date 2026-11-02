@@ -86,6 +86,15 @@ DATABASES = {
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
+
+# Vahemälu: vaikimisi failides (kaust .cache), REDIS_URL olemasolul Redises
+# (docker-compose.yml teenus "redis"). Koodis on mõlemal juhul sama django.core.cache.
+REDIS_URL = env("REDIS_URL", "")
+if REDIS_URL:
+    CACHES = {"default": {"BACKEND": "django.core.cache.backends.redis.RedisCache", "LOCATION": REDIS_URL}}
+else:
+    CACHES = {"default": {"BACKEND": "django.core.cache.backends.filebased.FileBasedCache", "LOCATION": BASE_DIR / ".cache"}}
+
 # Kasutajad on tabelis "user" (project.sql)
 AUTH_USER_MODEL = "cinema.User"
 

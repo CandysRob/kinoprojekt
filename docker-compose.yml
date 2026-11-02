@@ -15,6 +15,16 @@ services:
       timeout: 5s
       retries: 10
 
+  redis:
+    image: redis:7
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
   backend:
     build: .
     env_file: .env
@@ -22,12 +32,16 @@ services:
       # Konteinerite võrgus on andmebaas teenuse nime all
       POSTGRES_HOST: db
       POSTGRES_PORT: "5432"
+      # Dockeris on vahemälu Redises, ilma Dockerita failides (config/settings.py)
+      REDIS_URL: redis://redis:6379/0
     ports:
       - "${BACKEND_PORT:-8000}:8000"
     volumes:
       - .:/app
     depends_on:
       db:
+        condition: service_healthy
+      redis:
         condition: service_healthy
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health/')"]

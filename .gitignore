@@ -10,6 +10,7 @@ __pycache__/
 staticfiles/
 media/
 db.sqlite3
+.cache/
 
 # Andmebaasi andmed (Docker)
 pgdata/
