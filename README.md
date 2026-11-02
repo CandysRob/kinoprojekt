@@ -154,6 +154,30 @@ Indeksit ei lisatud veergudele, millel on vähe erinevaid väärtusi, näiteks
 andmebaas niikuinii suure osa tabelist. Admini otsing pealkirja järgi
 (`icontains`, SQL `ILIKE '%...%'`) tavalist B-puu indeksit ei kasuta.
 
+## Vahemälu plaan
+
+Vahemällu sobivad avalikud nimekirjad, mida loetakse palju ja muudetakse harva
+(muudatused tulevad admin-paneelist). Vastus on kõigile kasutajatele sama.
+
+| Päring / leht | Kui kauaks | Millal tühistada |
+| --- | --- | --- |
+| `GET /api/movies/` – leht **Filmid** | 10 min | filmi, žanri või filmi žanri lisamisel, muutmisel või kustutamisel |
+| `GET /api/genres/` | 1 h | žanri lisamisel, muutmisel või kustutamisel |
+| `GET /api/cinemas/` | 1 h | kino või saali lisamisel, muutmisel või kustutamisel |
+| `GET /api/screenings/` – leht **Seansid** (tänased ja järgmised seansid) | 1 min | seansi lisamisel, muutmisel või kustutamisel; ka filmi, saali või kino muutmisel, sest seansi juures on nende nimed |
+| `GET /api/screenings/?movie=5` – **filmi leht** | 1 min | samad juhud mis eelmisel real |
+
+Seansside aeg on lühike, sest nimekiri näitab ainult tulevasi seansse: juba
+alanud seanss võib nimekirjas olla kuni ühe minuti kauem.
+
+Vahemällu **ei panda**:
+
+- kasutaja enda andmeid (broneeringud, maksed, profiil) – need on igal kasutajal erinevad;
+- seansi vabu kohti, kui need API-sse lisatakse. Kui neid siiski vahemällu
+  panna, siis ainult mõneks sekundiks ja **pileti broneerimisel või
+  tühistamisel** tuleb selle seansi kirje kohe kustutada, muidu näeb kasutaja
+  juba müüdud kohta vabana.
+
 ## Testid ja kontrollid
 
 ```bash
