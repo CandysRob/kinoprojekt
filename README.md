@@ -134,6 +134,26 @@ näita.
 Nimekirjad on tavalised JSON-massiivid. Puuduva kirje korral tuleb vastus
 `404`, vigase `movie` väärtuse korral `400`.
 
+## Indeksid
+
+Indeksid on lisatud mudelite `Meta.indexes` kaudu (`cinema/models.py`,
+migratsioon `0002_search_and_sort_indexes.py`). Primaar- ja välisvõtmetel
+(näiteks `seansid.filmi_id`) ning unikaalsetel piirangutel on indeks juba olemas.
+
+| Indeks | Veerg | Kes seda kasutab |
+| --- | --- | --- |
+| `movie_title_idx` | `filmid.pealkiri` | `GET /api/movies/` ja leht **Filmid** (`/`): filmid sorteeritakse pealkirja järgi |
+| `movie_release_date_idx` | `filmid.väljalaskekuupäev` | admini filmide nimekirja sorteerimine kuupäeva järgi ja plaanitud „uusimad filmid” päring |
+| `genre_name_idx` | `žanrid.nimi` | `GET /api/genres/`: žanrid sorteeritakse nime järgi |
+| `cinema_name_idx` | `kino.kino_nimi` | `GET /api/cinemas/`: kinod sorteeritakse nime järgi |
+| `screening_starts_at_idx` | `seansid.algus_aeg` | `GET /api/screenings/` ja leht **Seansid** (`/seansid`): ainult tulevased seansid (`algus_aeg >= praegu`), sorteeritud algusaja järgi; ka admini kuupäevafilter |
+| `screening_movie_starts_idx` | `seansid.filmi_id, algus_aeg` | `GET /api/screenings/?movie=5` ja **filmi leht** (`/filmid/5`): ühe filmi tulevased seansid algusaja järjekorras ühe indeksiotsinguga |
+
+Indeksit ei lisatud veergudele, millel on vähe erinevaid väärtusi, näiteks
+`filmid.väikeväärtus` (tõene/väär) ja `broneeringud.staatus`: seal loeks
+andmebaas niikuinii suure osa tabelist. Admini otsing pealkirja järgi
+(`icontains`, SQL `ILIKE '%...%'`) tavalist B-puu indeksit ei kasuta.
+
 ## Testid ja kontrollid
 
 ```bash
