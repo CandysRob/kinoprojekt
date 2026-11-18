@@ -3,7 +3,7 @@
   kaart ainult näitab seda ega muuda midagi.
 -->
 <script setup>
-import { year } from '../format.js'
+import { isComingSoon, year } from '../format.js'
 import FilmPoster from './FilmPoster.vue'
 
 defineProps({
@@ -20,5 +20,6 @@ defineProps({
     </RouterLink>
     <p class="muted small">{{ film.genres.map((genre) => genre.name).join(', ') }}</p>
     <p class="muted small">{{ year(film.release_date) }}</p>
+    <p v-if="isComingSoon(film.release_date)" class="small"><strong>Peagi kinos</strong></p>
   </article>
 </template>

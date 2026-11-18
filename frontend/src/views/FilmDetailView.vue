@@ -8,7 +8,7 @@ import { ref, watch } from 'vue'
 import { fetchMovie, fetchScreenings } from '../api.js'
 import AsyncState from '../components/AsyncState.vue'
 import FilmPoster from '../components/FilmPoster.vue'
-import { formatDate, formatPrice, formatTime, year } from '../format.js'
+import { formatDate, formatPrice, formatTime, isComingSoon, year } from '../format.js'
 
 const props = defineProps({
   id: { type: String, required: true },
@@ -46,6 +46,7 @@ watch(() => props.id, load, { immediate: true })
       <FilmPoster :title="film.title" :url="film.poster_url" />
       <div>
         <h1>{{ film.title }}</h1>
+        <p v-if="isComingSoon(film.release_date)"><strong>Peagi kinos</strong></p>
         <p class="muted">
           {{ film.genres.map((genre) => genre.name).join(', ') }}
           · {{ year(film.release_date) }} · {{ film.duration_minutes }} min
