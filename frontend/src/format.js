@@ -14,3 +14,9 @@ export const formatPrice = (value) => `${Number(value).toFixed(2).replace('.', '
 
 // "2026-09-17" -> "2026"
 export const year = (date) => (date ? date.slice(0, 4) : '')
+
+// Tänane kuupäev Eesti aja järgi, nt "2026-10-28" (sv-SE annab just sellise kuju)
+const today = () => new Date().toLocaleDateString('sv-SE', { timeZone })
+
+// "Peagi kinos": väljalaskekuupäev on pärast tänast. Täna või varem välja tulnud film ei ole.
+export const isComingSoon = (date) => Boolean(date) && date > today()
