@@ -165,14 +165,14 @@ race() {
     printf '%s\n' "$out" | grep 'actually processed' || true
     rejected=$(printf '%s\n' "$out" | grep -c 'duplicate key value violates unique constraint' || true)
     echo "rejected by unique_booked_seat_per_screening: $rejected"
-    echo "tickets | distinct seats | seats sold twice | empty bookings"
+    echo "tickets | distinct seats | seats sold more than once | empty bookings"
     race_result
 
     echo "-- 2) Premiere rush: random seats, ON CONFLICT DO NOTHING (UNIQUE constraint ON)"
     reset_screening
     run_bench "rush, constraint ON" -t "$RACE_TX" -f "$BENCH/booking-race.sql" \
         $vars -D seat_min="$SEAT_MIN" -D seat_max="$SEAT_MAX"
-    echo "tickets | distinct seats | seats sold twice | empty bookings"
+    echo "tickets | distinct seats | seats sold more than once | empty bookings"
     race_result
 
     echo "-- 3) Same rush, check-then-insert, UNIQUE constraint DROPPED"
@@ -180,7 +180,7 @@ race() {
     q -c "ALTER TABLE broneeritud_kohad DROP CONSTRAINT unique_booked_seat_per_screening"
     run_bench "rush, check-then-insert, NO constr." -t "$RACE_TX" -f "$BENCH/booking-race-naive.sql" \
         $vars -D seat_min="$SEAT_MIN" -D seat_max="$SEAT_MAX"
-    echo "tickets | distinct seats | seats sold twice | empty bookings"
+    echo "tickets | distinct seats | seats sold more than once | empty bookings"
     race_result
 
     restore_constraint
