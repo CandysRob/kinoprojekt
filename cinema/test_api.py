@@ -104,6 +104,22 @@ class ScreeningApiTests(ApiTestData):
     def test_invalid_movie_filter_returns_400(self):
         self.assertEqual(self.client.get(reverse("screening-list"), {"movie": "x"}).status_code, 400)
 
+    def test_filter_by_date(self):
+        day = timezone.localdate(self.later_screening.starts_at).isoformat()
+        data = self.client.get(reverse("screening-list"), {"date": day}).json()
+        self.assertEqual([s["id"] for s in data], [self.later_screening.id])
+
+    def test_filter_by_date_without_screenings_returns_empty_list(self):
+        self.assertEqual(self.client.get(reverse("screening-list"), {"date": "2099-01-01"}).json(), [])
+
+    def test_filter_by_movie_and_date(self):
+        day = timezone.localdate(self.later_screening.starts_at).isoformat()
+        data = self.client.get(reverse("screening-list"), {"movie": self.movie.id, "date": day}).json()
+        self.assertEqual(data, [])
+
+    def test_invalid_date_filter_returns_400(self):
+        self.assertEqual(self.client.get(reverse("screening-list"), {"date": "homme"}).status_code, 400)
+
 
 class GenreAndCinemaApiTests(ApiTestData):
     def test_genres_and_cinemas(self):

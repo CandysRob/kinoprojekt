@@ -22,5 +22,11 @@ export const fetchMovies = (date) => getJson(date ? `movies/?date=${date}` : 'mo
 // GET /api/movies/5/ -> üks film
 export const fetchMovie = (id) => getJson(`movies/${id}/`)
 
-// GET /api/screenings/ -> tulevased seansid, movieId korral ainult selle filmi omad
-export const fetchScreenings = (movieId) => getJson(movieId ? `screenings/?movie=${movieId}` : 'screenings/')
+// GET /api/screenings/ -> tulevased seansid
+// movieId korral ainult selle filmi omad, date korral (nt "2026-11-28") ainult selle päeva omad
+export function fetchScreenings(movieId, date) {
+  const params = new URLSearchParams()
+  if (movieId) params.set('movie', movieId)
+  if (date) params.set('date', date)
+  return getJson(`screenings/?${params}`)
+}

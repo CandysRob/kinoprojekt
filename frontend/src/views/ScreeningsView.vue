@@ -1,6 +1,11 @@
-<!-- Seansside leht (/seansid): kõik tulevased seansid ühes tabelis algusaja järgi. -->
+<!--
+  Seansside leht (/seansid): kõik tulevased seansid ühes tabelis algusaja järgi.
+
+  Kuupäeva filter: kui kasutaja valib kuupäeva, käivitab watch() uuesti load()
+  ja päring on GET /api/screenings/?date=2026-11-28. Filtreerib backend, mitte Vue.
+-->
 <script setup>
-import { onMounted, ref } from 'vue'
+import { onMounted, ref, watch } from 'vue'
 
 import { fetchScreenings } from '../api.js'
 import AsyncState from '../components/AsyncState.vue'
@@ -9,12 +14,14 @@ import { formatDate, formatPrice, formatTime } from '../format.js'
 const screenings = ref([])
 const loading = ref(true)
 const error = ref('')
+// Valitud kuupäev kujul "2026-11-28", tühi = kõik tulevased seansid
+const selectedDate = ref('')
 
 async function load() {
   loading.value = true
   error.value = ''
   try {
-    screenings.value = await fetchScreenings()
+    screenings.value = await fetchScreenings(null, selectedDate.value)
   } catch (err) {
     error.value = err.message
   } finally {
@@ -23,15 +30,25 @@ async function load() {
 }
 
 onMounted(load)
+// Kuupäeva muutmisel (ka tühjendamisel) laeme seansid uuesti
+watch(selectedDate, load)
 </script>
 
 <template>
   <h1>Seansid</h1>
+
+  <div class="date-filter">
+    <label for="screening-date">Kuupäev</label>
+    <input id="screening-date" v-model="selectedDate" type="date" />
+    <button v-if="selectedDate" type="button" class="button" @click="selectedDate = ''">Näita kõiki seansse</button>
+  </div>
+  <p v-if="selectedDate" class="muted">Seansid {{ formatDate(selectedDate) }}</p>
+
   <AsyncState
     :loading="loading"
     :error="error"
     :empty="screenings.length === 0"
-    empty-text="Tulevasi seansse pole."
+    :empty-text="selectedDate ? `${formatDate(selectedDate)} tulevasi seansse pole. Vali teine kuupäev.` : 'Tulevasi seansse pole.'"
     @retry="load"
   >
     <table class="table">
