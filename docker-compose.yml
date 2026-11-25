@@ -65,5 +65,24 @@ services:
       backend:
         condition: service_healthy
 
+  # pgbench load tests (docs/testing/pgbench.md). Starts only on request:
+  #   docker compose run --rm pgbench <scenario>
+  # Uses a separate database, so the development data is not touched.
+  pgbench:
+    image: postgres:16
+    profiles: ["bench"]
+    entrypoint: ["sh", "/bench/run.sh"]
+    environment:
+      PGHOST: db
+      PGPORT: "5432"
+      PGUSER: ${POSTGRES_USER}
+      PGPASSWORD: ${POSTGRES_PASSWORD}
+      PGDATABASE: ${BENCH_DB:-kinoprojekt_bench}
+    volumes:
+      - ./bench:/bench:ro
+    depends_on:
+      db:
+        condition: service_healthy
+
 volumes:
   pgdata:
