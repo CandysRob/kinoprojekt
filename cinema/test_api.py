@@ -1,7 +1,10 @@
 from datetime import datetime, timedelta
 from decimal import Decimal
 
+from django.core.cache import cache
+from django.db import connection
 from django.test import TestCase
+from django.test.utils import CaptureQueriesContext
 from django.urls import reverse
 from django.utils import timezone
 
@@ -119,6 +122,52 @@ class ScreeningApiTests(ApiTestData):
 
     def test_invalid_date_filter_returns_400(self):
         self.assertEqual(self.client.get(reverse("screening-list"), {"date": "homme"}).status_code, 400)
+
+
+class DateFilterRangeTests(ApiTestData):
+    """Kuupäeva filter on ajavahemik Eesti aja järgi, ka suveaja vahetuse päevadel."""
+
+    @classmethod
+    def setUpTestData(cls):
+        super().setUpTestData()
+
+        def screening(movie, *moment):
+            starts_at = timezone.make_aware(datetime(*moment))
+            return Screening.objects.create(
+                movie=movie, hall=cls.hall, starts_at=starts_at, ends_at=starts_at + timedelta(hours=1), base_price=Decimal("9.50")
+            )
+
+        # 31.03.2030 läheb kell suveajale (päevas 23 tundi), 27.10.2030 talveajale (25 tundi)
+        cls.spring_first = screening(cls.movie, 2030, 3, 31, 0, 0)
+        cls.spring_last = screening(cls.movie, 2030, 3, 31, 22, 30)
+        cls.spring_next_day = screening(cls.other_movie, 2030, 4, 1, 0, 0)
+        cls.autumn_last = screening(cls.movie, 2030, 10, 27, 22, 0)
+        cls.autumn_next_day = screening(cls.other_movie, 2030, 10, 28, 0, 15)
+
+    def setUp(self):
+        cache.clear()  # vastused ei tohi tulla eelmise testi vahemälust
+
+    def ids(self, day):
+        return [s["id"] for s in self.client.get(reverse("screening-list"), {"date": day}).json()]
+
+    def test_day_boundaries_on_daylight_saving_days(self):
+        self.assertEqual(self.ids("2030-03-31"), [self.spring_first.id, self.spring_last.id])
+        self.assertEqual(self.ids("2030-04-01"), [self.spring_next_day.id])
+        self.assertEqual(self.ids("2030-10-27"), [self.autumn_last.id])
+        self.assertEqual(self.ids("2030-10-28"), [self.autumn_next_day.id])
+
+    def test_movies_filter_uses_same_day_boundaries(self):
+        titles = [m["title"] for m in self.client.get(reverse("movie-list"), {"date": "2030-04-01"}).json()]
+        self.assertEqual(titles, ["Aurora"])
+
+    def test_date_filter_sql_can_use_start_time_index(self):
+        # `starts_at__date` annaks SQL-is (algus_aeg AT TIME ZONE ...)::date, mis ei kasuta indeksit
+        for name in ("screening-list", "movie-list"):
+            with CaptureQueriesContext(connection) as queries:
+                self.client.get(reverse(name), {"date": "2030-03-31"})
+            sql = " ".join(q["sql"] for q in queries.captured_queries)
+            self.assertIn('"algus_aeg" >=', sql)
+            self.assertNotIn("AT TIME ZONE", sql)
 
 
 class GenreAndCinemaApiTests(ApiTestData):

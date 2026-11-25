@@ -11,7 +11,7 @@ Filmide ja seansside nimekirja saab filtreerida kuupäeva järgi:
 Nimekirjad (list) on vahemälus, vaata README "Vahemälu plaan" ja cinema/signals.py.
 """
 
-from datetime import date
+from datetime import date, datetime, time, timedelta
 
 from django.core.cache import cache
 from django.utils import timezone
@@ -60,6 +60,22 @@ def get_date_filter(request):
         raise ValidationError({"date": "Peab olema kuupäev kujul AAAA-KK-PP."})
 
 
+def day_range(selected_date):
+    """
+    Päeva algus ja järgmise päeva algus Eesti aja järgi (settings.TIME_ZONE).
+
+    Filtreerime vahemikuga `algus_aeg >= päeva algus AND algus_aeg < järgmise päeva algus`,
+    mitte `starts_at__date`-iga. `__date` teeb SQL-is `(algus_aeg AT TIME ZONE ...)::date`
+    ja sellise avaldise jaoks ei saa andmebaas indeksit `screening_starts_at_idx` kasutada,
+    vaid peab läbi käima kõik seansid (pgbench-iga mõõdetuna umbes 10 korda aeglasem).
+    Mõlemad piirid on kesköö Eesti aja järgi, seega on suveaja vahetuse päeval
+    (23 või 25 tundi) vahemik samuti õige.
+    """
+    start = timezone.make_aware(datetime.combine(selected_date, time.min))
+    end = timezone.make_aware(datetime.combine(selected_date + timedelta(days=1), time.min))
+    return start, end
+
+
 class MovieViewSet(CachedListMixin, viewsets.ReadOnlyModelViewSet):
     """Filmid pealkirja järgi. `?date=2026-11-28` näitab ainult filme, millel on sel päeval seanss."""
 
@@ -74,9 +90,10 @@ class MovieViewSet(CachedListMixin, viewsets.ReadOnlyModelViewSet):
         queryset = Movie.objects.prefetch_related("genres").order_by("title")
         selected_date = get_date_filter(self.request)
         if self.action == "list" and selected_date:
-            # screenings__starts_at__date: seansi algusaja kuupäev Eesti aja järgi (settings.TIME_ZONE).
+            # Seanss algab sel päeval Eesti aja järgi (vt day_range).
             # distinct(): film tuleb nimekirja ühe korra, ka siis, kui tal on sel päeval mitu seanssi.
-            queryset = queryset.filter(screenings__starts_at__date=selected_date).distinct()
+            start, end = day_range(selected_date)
+            queryset = queryset.filter(screenings__starts_at__gte=start, screenings__starts_at__lt=end).distinct()
         return queryset
 
     def get_serializer_class(self):
@@ -130,6 +147,7 @@ class ScreeningViewSet(CachedListMixin, viewsets.ReadOnlyModelViewSet):
             queryset = queryset.filter(movie_id=movie)
         selected_date = get_date_filter(self.request)
         if selected_date:
-            # Algusaja kuupäev Eesti aja järgi (settings.TIME_ZONE)
-            queryset = queryset.filter(starts_at__date=selected_date)
+            # Seanss algab sel päeval Eesti aja järgi (vt day_range)
+            start, end = day_range(selected_date)
+            queryset = queryset.filter(starts_at__gte=start, starts_at__lt=end)
         return queryset
