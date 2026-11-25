@@ -211,6 +211,26 @@ cd frontend && npm run build                       # frontend kompileerub
 
 Dockeris: `docker compose exec backend uv run python manage.py test`.
 
+### Koormus- ja testimistööriistad
+
+Igaüks uurib ühte tööriista oma harus (`test/<tööriist>-<eesnimi>`) ja kirjutab tulemused
+faili `docs/testing/<tööriist>.md`. Kahel inimesel ei tohi olla sama tööriist.
+
+| Tööriist | Tase | Kes | Haru | Dokument |
+| --- | --- | --- | --- | --- |
+| pgbench | andmebaas | Gerry | `test/pgbench-german` | [docs/testing/pgbench.md](docs/testing/pgbench.md) |
+| *veel valimata* (vaja API tasemel tööriista, nt k6 või Locust) | API | Rob | | |
+
+pgbench töötab Dockeris eraldi andmebaasiga `kinoprojekt_bench`, arendusandmeid see ei puuduta.
+Suure andmehulga (~10 000 seanssi, ~60 000 piletit) teeb käsk `seed_load_data`:
+
+```bash
+docker compose run --rm pgbench createdb
+docker compose run --rm -e POSTGRES_DB=kinoprojekt_bench backend uv run python manage.py migrate
+docker compose run --rm -e POSTGRES_DB=kinoprojekt_bench backend uv run python manage.py seed_load_data
+docker compose run --rm pgbench all
+```
+
 ### Mudelid ja `project.sql`
 
 Tabelid luuakse Django migratsioonidega (`cinema/migrations/`), mitte
