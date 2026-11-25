@@ -16,8 +16,8 @@ async function getJson(path) {
   return response.json()
 }
 
-// GET /api/movies/ -> kõik filmid
-export const fetchMovies = () => getJson('movies/')
+// GET /api/movies/ -> kõik filmid, date korral (nt "2026-11-28") ainult filmid, millel on sel päeval seanss
+export const fetchMovies = (date) => getJson(date ? `movies/?date=${date}` : 'movies/')
 
 // GET /api/movies/5/ -> üks film
 export const fetchMovie = (id) => getJson(`movies/${id}/`)

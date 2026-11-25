@@ -42,6 +42,8 @@ a { color: var(--dark); }
 }
 
 /* Filmide nimekiri */
+.date-filter { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem; margin-bottom: 1rem; }
+.date-filter input { padding: 0.45rem 0.5rem; border: 1px solid var(--border); border-radius: var(--radius); font: inherit; }
 .film-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 1rem; }
 .film-card { padding: 0.75rem; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); }
 .film-card a { text-decoration: none; }
