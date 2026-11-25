@@ -5,8 +5,12 @@ need JSON-ina. ReadOnlyModelViewSet annab kaks aadressi:
     /api/movies/       -> list (kõik filmid)
     /api/movies/5/     -> retrieve (üks film, puudumisel 404)
 
+Filmide nimekirja saab filtreerida seansi kuupäeva järgi: /api/movies/?date=2026-11-28
+
 Nimekirjad (list) on vahemälus, vaata README "Vahemälu plaan" ja cinema/signals.py.
 """
+
+from datetime import date
 
 from django.core.cache import cache
 from django.utils import timezone
@@ -45,9 +49,32 @@ class CachedListMixin:
 
 
 class MovieViewSet(CachedListMixin, viewsets.ReadOnlyModelViewSet):
-    # prefetch_related laeb kõigi filmide žanrid ühe lisapäringuga, mitte iga filmi jaoks eraldi
-    queryset = Movie.objects.prefetch_related("genres").order_by("title")
+    """Filmid pealkirja järgi. `?date=2026-11-28` näitab ainult filme, millel on sel päeval seanss."""
+
     cache_seconds = 10 * MINUTE
+
+    def get_date_filter(self):
+        value = self.request.query_params.get("date")
+        if not value:
+            return None
+        try:
+            return date.fromisoformat(value)
+        except ValueError:
+            raise ValidationError({"date": "Peab olema kuupäev kujul AAAA-KK-PP."})
+
+    def get_cache_key(self):
+        # Igal kuupäeval on oma kirje, ilma filtrita nimekirjal oma
+        return f"api:movie:list:{self.get_date_filter() or 'all'}"
+
+    def get_queryset(self):
+        # prefetch_related laeb kõigi filmide žanrid ühe lisapäringuga, mitte iga filmi jaoks eraldi
+        queryset = Movie.objects.prefetch_related("genres").order_by("title")
+        selected_date = self.get_date_filter()
+        if self.action == "list" and selected_date:
+            # screenings__starts_at__date: seansi algusaja kuupäev Eesti aja järgi (settings.TIME_ZONE).
+            # distinct(): film tuleb nimekirja ühe korra, ka siis, kui tal on sel päeval mitu seanssi.
+            queryset = queryset.filter(screenings__starts_at__date=selected_date).distinct()
+        return queryset
 
     def get_serializer_class(self):
         # Nimekirjas pole kirjeldust vaja, filmi lehel on

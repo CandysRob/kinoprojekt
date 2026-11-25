@@ -1,4 +1,4 @@
-from datetime import timedelta
+from datetime import datetime, timedelta
 from decimal import Decimal
 
 from django.test import TestCase
@@ -44,6 +44,46 @@ class MovieApiTests(ApiTestData):
 
     def test_missing_movie_returns_404(self):
         self.assertEqual(self.client.get(reverse("movie-detail", args=[999999])).status_code, 404)
+
+
+class MovieDateFilterTests(ApiTestData):
+    @classmethod
+    def setUpTestData(cls):
+        super().setUpTestData()
+
+        def screening(movie, year, month, day, hour, minute=0):
+            # make_aware kasutab settings.TIME_ZONE-i ehk Eesti aega
+            starts_at = timezone.make_aware(datetime(year, month, day, hour, minute))
+            Screening.objects.create(
+                movie=movie, hall=cls.hall, starts_at=starts_at, ends_at=starts_at + timedelta(hours=2), base_price=Decimal("9.50")
+            )
+
+        # Põhjatähel on 10. märtsil kaks seanssi
+        screening(cls.movie, 2030, 3, 10, 14)
+        screening(cls.movie, 2030, 3, 10, 20)
+        # Aurora algab 11. märtsil 00:30 Eesti aja järgi (UTC järgi on see veel 10. märts)
+        screening(cls.other_movie, 2030, 3, 11, 0, 30)
+
+    def titles(self, date):
+        return [m["title"] for m in self.client.get(reverse("movie-list"), {"date": date}).json()]
+
+    def test_movie_with_many_screenings_on_date_appears_once(self):
+        self.assertEqual(self.titles("2030-03-10"), ["Põhjatäht"])
+
+    def test_date_is_in_estonian_time(self):
+        self.assertEqual(self.titles("2030-03-11"), ["Aurora"])
+
+    def test_date_without_screenings_returns_empty_list(self):
+        self.assertEqual(self.titles("2030-03-12"), [])
+
+    def test_without_date_returns_all_movies(self):
+        self.titles("2030-03-12")  # filtreeritud nimekiri ei tohi jääda vahemälus ilma filtrita nimekirja asemele
+        data = self.client.get(reverse("movie-list")).json()
+        self.assertEqual([m["title"] for m in data], ["Aurora", "Põhjatäht"])
+
+    def test_invalid_date_returns_400(self):
+        self.assertEqual(self.client.get(reverse("movie-list"), {"date": "homme"}).status_code, 400)
+        self.assertEqual(self.client.get(reverse("movie-list"), {"date": "2030-02-30"}).status_code, 400)
 
 
 class ScreeningApiTests(ApiTestData):
